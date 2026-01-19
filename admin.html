@@ -1,0 +1,223 @@
+
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Meyras Backstop – Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --bg:#F6F1E9; --card:#FFFFFF; --muted:#F2E7D9;
+      --text:#3B2F2F; --accent:#8C6A4A; --accent-2:#C8A984;
+    }
+    *{box-sizing:border-box}
+    body{margin:24px; font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color:var(--text); background:var(--bg)}
+    header{display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:16px}
+    h2{margin:0}
+    .card{background:var(--card); border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.05); padding:16px}
+    .btn{background:var(--accent); color:#fff; border:0; padding:8px 12px; border-radius:8px; cursor:pointer}
+    .btn.secondary{background:var(--accent-2); color:#2b2b2b}
+    .btn:disabled{opacity:.5; cursor:not-allowed}
+    .inputs{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+    input[type="email"],input[type="password"],input[type="date"]{padding:8px 10px; border:1px solid #ddd; border-radius:8px}
+    table{border-collapse:collapse; width:100%; background:#fff; border-radius:12px; overflow:hidden}
+    th,td{padding:10px 12px; border-bottom:1px solid #eee; vertical-align:top}
+    th{background:var(--muted); text-align:left}
+    .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:12px 0}
+    .hint{color:#6b6b6b; font-size:12px}
+    .sum{font-weight:700}
+    .right{display:flex; gap:8px; align-items:center}
+    .badge{background:var(--accent); color:#fff; border-radius:1em; padding:2px 8px; font-size:12px}
+  </style>
+</head>
+<body>
+  <header>
+    <h2>🧺 Meyras Backstop – Admin</h2>
+    <div id="auth" class="card"></div>
+  </header>
+
+  <section class="card">
+    <div class="toolbar">
+      <div class="inputs">
+        <label>Von <input type="date" id="from"></label>
+        <label>Bis <input type="date" id="to"></label>
+      </div>
+      <button class="btn" id="btnLoad">Laden</button>
+      <div class="right">
+        <button class="btn secondary" id="btnToday">Heute</button>
+        <button class="btn secondary" id="btnTomorrow">Morgen</button>
+        <button class="btn secondary" id="btnWeek">Diese Woche</button>
+        <button class="btn secondary" id="btnExport">CSV Export</button>
+      </div>
+    </div>
+    <div class="hint">Tipp: Filter setzen und dann exportieren – ideal für die Backstube.</div>
+  </section>
+
+  <section style="margin-top:16px">
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th>Abholtag</th>
+          <th>Bestellt am</th>
+          <th>Kunde</th>
+          <th>Artikel (Menge)</th>
+          <th class="sum">Summe</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+<script>
+  // =======================
+  //  KONFIGURATION
+  // =======================
+  const SUPABASE_URL  = "https://luriirqfumrfjnwnmdqs.supabase.co";
+  const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1cmlpcnFmdW1yZmpud25tZHFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4NTAyMzYsImV4cCI6MjA4NDQyNjIzNn0.41_HuuEoh6cUA6zPxqCtK278HuVjLO6ZP6oXfsiKj8s";
+  const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  // =======================
+  //  AUTH (Login/Magic Link)
+  // =======================
+  const authDiv = document.getElementById('auth');
+  async function renderAuth() {
+    const { data: { user } } = await supa.auth.getUser();
+    if (user) {
+      authDiv.innerHTML = `
+        <div class="inputs">
+          <div><b>Angemeldet:</b> ${user.email}</div>
+          <button class="btn" id="logout">Logout</button>
+        </div>`;
+      document.getElementById('logout').onclick = async () => { await supa.auth.signOut(); location.reload(); };
+    } else {
+      authDiv.innerHTML = `
+        <div class="inputs">
+          <input type="email" id="email" placeholder="E-Mail" />
+          <input type="password" id="pwd" placeholder="Passwort" />
+          <button class="btn" id="login">Login</button>
+          <button class="btn secondary" id="magic">Magic Link</button>
+        </div>
+        <div class="hint">Hinweis: Nur Admin-E-Mails haben Leserechte (RLS-Policy).</div>
+      `;
+      document.getElementById('login').onclick = async () => {
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('pwd').value.trim();
+        const { error } = await supa.auth.signInWithPassword({ email, password });
+        if (error) alert(error.message); else location.reload();
+      };
+      document.getElementById('magic').onclick = async () => {
+        const email = document.getElementById('email').value.trim();
+        const { error } = await supa.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.href }});
+        if (error) alert(error.message); else alert("Magic Link gesendet.");
+      };
+    }
+  }
+
+  // =======================
+  //  LADEN & RENDERN
+  // =======================
+  const tbody = document.querySelector('#tbl tbody');
+
+  function fmtDate(d) {
+    return new Date(d).toLocaleDateString('de-DE',{weekday:'short', year:'numeric', month:'2-digit', day:'2-digit'});
+  }
+  function fmtMoney(n) {
+    return Number(n).toLocaleString('de-DE', {style:'currency', currency:'EUR'});
+  }
+
+  async function loadOrders(from, to) {
+    tbody.innerHTML = `<tr><td colspan="5">Lade…</td></tr>`;
+    let q = supa.from('orders_with_items').select('*').order('pickup_date', { ascending:true });
+
+    if (from) q = q.gte('pickup_date', from);
+    if (to)   q = q.lte('pickup_date', to);
+
+    const { data, error } = await q;
+    if (error) {
+      tbody.innerHTML = `<tr><td colspan="5">Fehler: ${error.message}</td></tr>`;
+      return;
+    }
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5">Keine Bestellungen im Zeitraum.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map(o => `
+      <tr>
+        <td>${fmtDate(o.pickup_date)}</td>
+        <td>${fmtDate(o.created_at)}</td>
+        <td>${o.customer_name ?? '–'}</td>
+        <td>${o.items ?? '–'}</td>
+        <td class="sum">${fmtMoney(o.total)}</td>
+      </tr>
+    `).join('');
+  }
+
+  // =======================
+  //  FILTER BUTTONS
+  // =======================
+  function iso(d){ return d.toISOString().slice(0,10); }
+  function startOfWeek(d){
+    const day = d.getDay(); // 0=So … 6=Sa
+    const diff = (day === 0 ? -6 : 1 - day); // Montag als Wochenstart
+    const s = new Date(d); s.setDate(s.getDate()+diff); return s;
+  }
+
+  document.getElementById('btnLoad').onclick = () => {
+    const from = document.getElementById('from').value || null;
+    const to   = document.getElementById('to').value   || null;
+    loadOrders(from, to);
+  };
+
+  document.getElementById('btnToday').onclick = () => {
+    const d = new Date(); const f = iso(d);
+    document.getElementById('from').value = f;
+    document.getElementById('to').value   = f;
+    loadOrders(f, f);
+  };
+
+  document.getElementById('btnTomorrow').onclick = () => {
+    const d = new Date(); d.setDate(d.getDate()+1); const f = iso(d);
+    document.getElementById('from').value = f;
+    document.getElementById('to').value   = f;
+    loadOrders(f, f);
+  };
+
+  document.getElementById('btnWeek').onclick = () => {
+    const d = new Date();
+    const s = startOfWeek(d); const e = new Date(s); e.setDate(s.getDate()+6);
+    const f = iso(s), t = iso(e);
+    document.getElementById('from').value = f;
+    document.getElementById('to').value   = t;
+    loadOrders(f, t);
+  };
+
+  // =======================
+  //  CSV EXPORT
+  // =======================
+  document.getElementById('btnExport').onclick = async () => {
+    const rows = [...tbody.querySelectorAll('tr')].map(tr =>
+      [...tr.children].map(td => `"${td.textContent.replace(/"/g,'""')}"`).join(',')
+    );
+    if (rows.length === 0) { alert('Keine Daten'); return; }
+    const csv = ["Abholtag,Bestellt am,Kunde,Artikel,Summe", ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `bestellungen_${Date.now()}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // =======================
+  //  START
+  // =======================
+  (async () => {
+    await renderAuth();
+    // Falls bereits eingeloggt → „Heute“ laden
+    const { data:{ user } } = await supa.auth.getUser();
+    if (user) document.getElementById('btnToday').click();
+  })();
+</script>
+</body>
+</html>
