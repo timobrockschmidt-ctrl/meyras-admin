@@ -1,329 +1,320 @@
-{\rtf1\ansi\ansicpg1252\cocoartf2867
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\froman\fcharset0 Times-Roman;}
-{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
-{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;}
-\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
-\deftab720
-\pard\pardeftab720\partightenfactor0
 
-\f0\fs24 \cf0 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec2 <!doctype html>\
-<html lang="de">\
-<head>\
-\'a0 <meta charset="utf-8"/>\
-\'a0 <meta name="viewport" content="width=device-width,initial-scale=1"/>\
-\'a0 <title>Meyras Backstop \'96 Admin</title>\
-\'a0 <!-- KORREKTES Script-Tag f\'fcr supabase-js v2 (UMD) -->\
-\'a0 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>\
-\'a0 <style>\
-\'a0\'a0\'a0 :root\{\
-\'a0\'a0\'a0\'a0\'a0 --bg:#F6F1E9; --card:#FFFFFF; --muted:#F2E7D9;\
-\'a0\'a0\'a0\'a0\'a0 --text:#3B2F2F; --accent:#8C6A4A; --accent-2:#C8A984;\
-\'a0\'a0\'a0 \}\
-\'a0\'a0\'a0 *\{box-sizing:border-box\}\
-\'a0\'a0\'a0 body\{margin:24px; font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; color:var(--text); background:var(--bg)\}\
-\'a0\'a0\'a0 header\{display:flex; gap:12px; align-items:flex-start; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap\}\
-\'a0\'a0\'a0 h2\{margin:0\}\
-\'a0\'a0\'a0 .card\{background:var(--card); border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.05); padding:16px\}\
-\'a0\'a0\'a0 .btn\{background:var(--accent); color:#fff; border:0; padding:8px 12px; border-radius:8px; cursor:pointer\}\
-\'a0\'a0\'a0 .btn.secondary\{background:var(--accent-2); color:#2b2b2b\}\
-\'a0\'a0\'a0 .btn:disabled\{opacity:.5; cursor:not-allowed\}\
-\'a0\'a0\'a0 .inputs\{display:flex; gap:8px; flex-wrap:wrap; align-items:center\}\
-\'a0\'a0\'a0 input[type="email"],input[type="password"],input[type="date"],input[type="text"]\{padding:8px 10px; border:1px solid #ddd; border-radius:8px\}\
-\'a0\'a0\'a0 table\{border-collapse:collapse; width:100%; background:#fff; border-radius:12px; overflow:hidden\}\
-\'a0\'a0\'a0 th,td\{padding:10px 12px; border-bottom:1px solid #eee; vertical-align:top\}\
-\'a0\'a0\'a0 th\{background:var(--muted); text-align:left\}\
-\'a0\'a0\'a0 .toolbar\{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:12px 0\}\
-\'a0\'a0\'a0 .hint\{color:#6b6b6b; font-size:12px\}\
-\'a0\'a0\'a0 .sum\{font-weight:700\}\
-\'a0\'a0\'a0 .right\{display:flex; gap:8px; align-items:center\}\
-\'a0\'a0\'a0 .chip\{display:inline-flex; gap:6px; align-items:center; padding:6px 10px; border-radius:9999px; background:#f1ebe4; margin:4px 6px 0 0; font-size:13px\}\
-\'a0\'a0\'a0 .filters\{display:flex; flex-wrap:wrap; align-items:center\}\
-\'a0 </style>\
-</head>\
-<body>\
-<header>\
-\'a0 <h2>\uc0\u55358 \u56826  Meyras Backstop \'96 Admin</h2>\
-\
-\'a0 <!-- AUTH -->\
-\'a0 <div id="auth" class="card"></div>\
-\
-\'a0 <!-- DEVICE-ID: wird als x-device-id Header gesetzt -->\
-\'a0 <div class="card" style="min-width:320px;">\
-\'a0\'a0\'a0 <div class="inputs">\
-\'a0\'a0\'a0\'a0\'a0 <label style="display:flex; gap:6px; align-items:center;">\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <span>Device\uc0\u8209 ID:</span>\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <input type="text" id="devId" placeholder="aus der App (Profil\uc0\u8209 Debug) einf\'fcgen" style="min-width:220px"/>\
-\'a0\'a0\'a0\'a0\'a0 </label>\
-\'a0\'a0\'a0\'a0\'a0 <button class="btn secondary" id="btnSetDev">\'dcbernehmen</button>\
-\'a0\'a0\'a0 </div>\
-\'a0\'a0\'a0 <div class="hint">RLS zeigt nur Daten f\'fcr diese Device\uc0\u8209 ID. Leer lassen, falls deine Policies Admin\u8209 Leserechte erlauben.</div>\
-\'a0 </div>\
-</header>\
-\
-<section class="card">\
-\'a0 <div class="toolbar">\
-\'a0\'a0\'a0 <div class="inputs">\
-\'a0\'a0\'a0\'a0\'a0 <label>Von <input type="date" id="from"></label>\
-\'a0\'a0\'a0\'a0\'a0 <label>Bis <input type="date" id="to"></label>\
-\'a0\'a0\'a0 </div>\
-\'a0\'a0\'a0 <button class="btn" id="btnLoad">Laden</button>\
-\'a0\'a0\'a0 <div class="right">\
-\'a0\'a0\'a0\'a0\'a0 <button class="btn secondary" id="btnToday">Heute</button>\
-\'a0\'a0\'a0\'a0\'a0 <button class="btn secondary" id="btnTomorrow">Morgen</button>\
-\'a0\'a0\'a0\'a0\'a0 <button class="btn secondary" id="btnWeek">Diese Woche</button>\
-\'a0\'a0\'a0\'a0\'a0 <button class="btn secondary" id="btnExport">CSV Export</button>\
-\'a0\'a0\'a0 </div>\
-\'a0 </div>\
-\
-\'a0 <!-- Produkt-Filter -->\
-\'a0 <div class="filters" id="productFilters" aria-label="Produktfilter"></div>\
-\
-\'a0 <div class="hint" style="margin-top:8px">\
-\'a0\'a0\'a0 Tipp: Filter setzen und dann exportieren \'96 ideal f\'fcr die Backstube.\
-\'a0 </div>\
-</section>\
-\
-<section style="margin-top:16px">\
-\'a0 <table id="tbl">\
-\'a0\'a0\'a0 <thead>\
-\'a0\'a0\'a0 <tr>\
-\'a0\'a0\'a0\'a0\'a0 <th>Abholtag</th>\
-\'a0\'a0\'a0\'a0\'a0 <th>Bestellt am</th>\
-\'a0\'a0\'a0\'a0\'a0 <th>Kunde</th>\
-\'a0\'a0\'a0\'a0\'a0 <th>Artikel (Menge)</th>\
-\'a0\'a0\'a0\'a0\'a0 <th class="sum">Summe</th>\
-\'a0\'a0\'a0 </tr>\
-\'a0\'a0\'a0 </thead>\
-\'a0\'a0\'a0 <tbody></tbody>\
-\'a0 </table>\
-</section>\
-\
-<script>\
-\'a0 // =======================\
-\'a0 // KONFIGURATION\
-\'a0 // =======================\
-\'a0 const SUPABASE_URL\'a0 = "https://luriirqfumrfjnwnmdqs.supabase.co";\
-\'a0 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1cmlpcnFmdW1yZmpud25tZHFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4NTAyMzYsImV4cCI6MjA4NDQyNjIzNn0.41_HuuEoh6cUA6zPxqCtK278HuVjLO6ZP6oXfsiKj8s";\
-\
-\'a0 // Supabase-Client mit optionalem x-device-id Header\
-\'a0 let supa = createClientWithDevice("");\
-\'a0 function createClientWithDevice(devId) \{\
-\'a0\'a0\'a0 const headers = devId ? \{ 'x-device-id': devId \} : \{\};\
-\'a0\'a0\'a0 return supabase.createClient(SUPABASE_URL, SUPABASE_ANON, \{\
-\'a0\'a0\'a0\'a0\'a0 auth: \{ persistSession: true, autoRefreshToken: true \},\
-\'a0\'a0\'a0\'a0\'a0 global: \{ headers \}\
-\'a0\'a0\'a0 \});\
-\'a0 \}\
-\'a0 document.getElementById('btnSetDev').onclick = () => \{\
-\'a0\'a0\'a0 const devId = document.getElementById('devId').value.trim();\
-\'a0\'a0\'a0 supa = createClientWithDevice(devId);\
-\'a0\'a0\'a0 document.getElementById('btnLoad').click();\
-\'a0 \};\
-\
-\'a0 // =======================\
-\'a0 // AUTH (Login/Magic Link)\
-\'a0 // =======================\
-\'a0 const authDiv = document.getElementById('auth');\
-\
-\'a0 async function renderAuth() \{\
-\'a0\'a0\'a0 const \{ data: \{ user \} \} = await supa.auth.getUser();\
-\'a0\'a0\'a0 if (user) \{\
-\'a0\'a0\'a0\'a0\'a0 authDiv.innerHTML = `\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <div class="inputs">\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <div><b>Angemeldet:</b> $\{user.email\}</div>\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <button class="btn" id="logout">Logout</button>\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 </div>`;\
-\'a0\'a0\'a0\'a0\'a0 document.getElementById('logout').onclick = async () => \{ await supa.auth.signOut(); location.reload(); \};\
-\'a0\'a0\'a0 \} else \{\
-\'a0\'a0\'a0\'a0\'a0 authDiv.innerHTML = `\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <div class="inputs">\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <input type="email" id="email" placeholder="E\uc0\u8209 Mail" />\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <input type="password" id="pwd" placeholder="Passwort" />\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <button class="btn" id="login">Login</button>\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <button class="btn secondary" id="magic">Magic Link</button>\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 </div>\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <div class="hint">Hinweis: Admin\uc0\u8209 E\u8209 Mails k\'f6nnen (per Policy) erweiterte Leserechte haben.</div>`;\
-\'a0\'a0\'a0\'a0\'a0 document.getElementById('login').onclick = async () => \{\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 const email = document.getElementById('email').value.trim();\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 const password = document.getElementById('pwd').value.trim();\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 const \{ error \} = await supa.auth.signInWithPassword(\{ email, password \});\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if (error) alert(error.message); else location.reload();\
-\'a0\'a0\'a0\'a0\'a0 \};\
-\'a0\'a0\'a0\'a0\'a0 document.getElementById('magic').onclick = async () => \{\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 const email = document.getElementById('email').value.trim();\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 const \{ error \} = await supa.auth.signInWithOtp(\{ email, options:\{ emailRedirectTo: location.href \}\});\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if (error) alert(error.message); else alert("Magic Link gesendet.");\
-\'a0\'a0\'a0\'a0\'a0 \};\
-\'a0\'a0\'a0 \}\
-\'a0 \}\
-\
-\'a0 // =======================\
-\'a0 // LISTE LADEN & RENDERN\
-\'a0 // =======================\
-\'a0 const tbody = document.querySelector('#tbl tbody');\
-\'a0 const productFiltersDiv = document.getElementById('productFilters');\
-\
-\'a0 let lastData = [];\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 // letzte Rohdaten von Supabase\
-\'a0 const selectedProducts = new Set();// aktuell gew\'e4hlte Produkte\
-\
-\'a0 const fmtDate\'a0 = d => new Date(d).toLocaleDateString('de-DE',\{weekday:'short', year:'numeric', month:'2-digit', day:'2-digit'\});\
-\'a0 const fmtMoney = n => Number(n).toLocaleString('de-DE', \{style:'currency', currency:'EUR'\});\
-\
-\'a0 function renderProductFilters(fromData)\{\
-\'a0\'a0\'a0 // Alle Produktnamen ermitteln (unique)\
-\'a0\'a0\'a0 const set = new Set();\
-\'a0\'a0\'a0 (fromData || []).forEach(o => (o.items || []).forEach(it => set.add(it.product_name)));\
-\'a0\'a0\'a0 const names = [...set].sort((a,b)=>a.localeCompare(b,'de'));\
-\
-\'a0\'a0\'a0 if(names.length === 0)\{\
-\'a0\'a0\'a0\'a0\'a0 productFiltersDiv.innerHTML = '';\
-\'a0\'a0\'a0\'a0\'a0 return;\
-\'a0\'a0\'a0 \}\
-\
-\'a0\'a0\'a0 // Chips/Checkboxen bauen\
-\'a0\'a0\'a0 productFiltersDiv.innerHTML = names.map(name => \{\
-\'a0\'a0\'a0\'a0\'a0 const id = `prod_$\{name.replace(/\\W/g,'_')\}`;\
-\'a0\'a0\'a0\'a0\'a0 const checked = selectedProducts.has(name) ? 'checked' : '';\
-\'a0\'a0\'a0\'a0\'a0 return `<label class="chip">\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <input type="checkbox" id="$\{id\}" data-name="$\{name\}" $\{checked\} />\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <span>$\{name\}</span>\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0\'a0 </label>`;\
-\'a0\'a0\'a0 \}).join('') +\
-\'a0\'a0\'a0 (names.length ? `<button class="btn secondary" id="btnReset" style="margin-left:8px;">Filter zur\'fccksetzen</button>` : '');\
-\
-\'a0\'a0\'a0 // Events binden\
-\'a0\'a0\'a0 names.forEach(name => \{\
-\'a0\'a0\'a0\'a0\'a0 const id = `prod_$\{name.replace(/\\W/g,'_')\}`;\
-\'a0\'a0\'a0\'a0\'a0 const el = document.getElementById(id);\
-\'a0\'a0\'a0\'a0\'a0 el.addEventListener('change', () => \{\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 if(el.checked) selectedProducts.add(name); else selectedProducts.delete(name);\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 renderTable(applyFilters(lastData));\
-\'a0\'a0\'a0\'a0\'a0 \});\
-\'a0\'a0\'a0 \});\
-\'a0\'a0\'a0 const btnReset = document.getElementById('btnReset');\
-\'a0\'a0\'a0 if(btnReset)\{\
-\'a0\'a0\'a0\'a0\'a0 btnReset.onclick = () => \{\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 selectedProducts.clear();\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 renderProductFilters(lastData);\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 renderTable(lastData);\
-\'a0\'a0\'a0\'a0\'a0 \};\
-\'a0\'a0\'a0 \}\
-\'a0 \}\
-\
-\'a0 function applyFilters(data)\{\
-\'a0\'a0\'a0 if(selectedProducts.size === 0) return data;\
-\'a0\'a0\'a0 return (data || []).filter(o => (o.items || []).some(it => selectedProducts.has(it.product_name)));\
-\'a0 \}\
-\
-\'a0 function renderTable(data)\{\
-\'a0\'a0\'a0 if(!data || data.length === 0)\{\
-\'a0\'a0\'a0\'a0\'a0 tbody.innerHTML = `<tr><td colspan="5">Keine Bestellungen im Zeitraum.</td></tr>`;\
-\'a0\'a0\'a0\'a0\'a0 return;\
-\'a0\'a0\'a0 \}\
-\'a0\'a0\'a0 const renderItems = arr => (!Array.isArray(arr) || arr.length===0) ? '\'96'\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 : arr.map(it => `$\{it.product_name\} ($\{it.quantity\})`).join(', ');\
-\
-\'a0\'a0\'a0 tbody.innerHTML = data.map(o => `\
-\'a0\'a0\'a0\'a0\'a0 <tr>\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <td>$\{fmtDate(o.pickup_date)\}</td>\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <td>$\{fmtDate(o.created_at)\}</td>\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <td>$\{o.customer_name ?? '\'96'\}</td>\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <td>$\{renderItems(o.items)\}</td>\
-\'a0\'a0\'a0\'a0\'a0\'a0\'a0 <td class="sum">$\{fmtMoney(o.total)\}</td>\
-\'a0\'a0\'a0\'a0\'a0 </tr>\
-\'a0\'a0\'a0 `).join('');\
-\'a0 \}\
-\
-\'a0 async function loadOrders(from, to) \{\
-\'a0\'a0\'a0 tbody.innerHTML = `<tr><td colspan="5">Lade\'85</td></tr>`;\
-\
-\'a0\'a0\'a0 // View: orders_with_items_json\
-\'a0\'a0\'a0 let q = supa.from('orders_with_items_json').select('*').order('pickup_date', \{ ascending:true \});\
-\'a0\'a0\'a0 if (from) q = q.gte('pickup_date', from);\
-\'a0\'a0\'a0 if (to)\'a0\'a0 q = q.lte('pickup_date', to);\
-\
-\'a0\'a0\'a0 const \{ data, error \} = await q;\
-\'a0\'a0\'a0 if (error) \{\
-\'a0\'a0\'a0\'a0\'a0 tbody.innerHTML = `<tr><td colspan="5">Fehler: $\{error.message\}</td></tr>`;\
-\'a0\'a0\'a0\'a0\'a0 return;\
-\'a0\'a0\'a0 \}\
-\'a0\'a0\'a0 lastData = data || [];\
-\'a0\'a0\'a0 // Filter-Liste aktualisieren (bestehende Auswahl beibehalten)\
-\'a0\'a0\'a0 renderProductFilters(lastData);\
-\'a0\'a0\'a0 renderTable(applyFilters(lastData));\
-\'a0 \}\
-\
-\'a0 // =======================\
-\'a0 // FILTER BUTTONS\
-\'a0 // =======================\
-\'a0 const iso = d => d.toISOString().slice(0,10);\
-\'a0 function startOfWeek(d)\{\
-\'a0\'a0\'a0 const day = d.getDay(); // 0=So \'85 6=Sa\
-\'a0\'a0\'a0 const diff = (day === 0 ? -6 : 1 - day); // Montag als Wochenstart\
-\'a0\'a0\'a0 const s = new Date(d); s.setDate(s.getDate()+diff); return s;\
-\'a0 \}\
-\
-\'a0 document.getElementById('btnLoad').onclick = () => \{\
-\'a0\'a0\'a0 const from = document.getElementById('from').value || null;\
-\'a0\'a0\'a0 const to\'a0\'a0 = document.getElementById('to').value\'a0\'a0 || null;\
-\'a0\'a0\'a0 loadOrders(from, to);\
-\'a0 \};\
-\'a0 document.getElementById('btnToday').onclick = () => \{\
-\'a0\'a0\'a0 const d = new Date(); const f = iso(d);\
-\'a0\'a0\'a0 document.getElementById('from').value = f;\
-\'a0\'a0\'a0 document.getElementById('to').value = f;\
-\'a0\'a0\'a0 loadOrders(f, f);\
-\'a0 \};\
-\'a0 document.getElementById('btnTomorrow').onclick = () => \{\
-\'a0\'a0\'a0 const d = new Date(); d.setDate(d.getDate()+1); const f = iso(d);\
-\'a0\'a0\'a0 document.getElementById('from').value = f;\
-\'a0\'a0\'a0 document.getElementById('to').value = f;\
-\'a0\'a0\'a0 loadOrders(f, f);\
-\'a0 \};\
-\'a0 document.getElementById('btnWeek').onclick = () => \{\
-\'a0\'a0\'a0 const d = new Date();\
-\'a0\'a0\'a0 const s = startOfWeek(d); const e = new Date(s); e.setDate(s.getDate()+6);\
-\'a0\'a0\'a0 const f = iso(s), t = iso(e);\
-\'a0\'a0\'a0 document.getElementById('from').value = f;\
-\'a0\'a0\'a0 document.getElementById('to').value = t;\
-\'a0\'a0\'a0 loadOrders(f, t);\
-\'a0 \};\
-\
-\'a0 // =======================\
-\'a0 // CSV EXPORT (gefilterte Sicht)\
-\'a0 // =======================\
-\'a0 document.getElementById('btnExport').onclick = async () => \{\
-\'a0\'a0\'a0 const rows = [...tbody.querySelectorAll('tr')].map(tr =>\
-\'a0\'a0\'a0\'a0\'a0 [...tr.children].map(td => `"$\{td.textContent.replace(/"/g,'""')\}"`).join(',')\
-\'a0\'a0\'a0 );\
-\'a0\'a0\'a0 if (rows.length === 0) \{ alert('Keine Daten'); return; \}\
-\'a0\'a0\'a0 const csv = ["Abholtag,Bestellt am,Kunde,Artikel,Summe", ...rows].join("\\n");\
-\'a0\'a0\'a0 const blob = new Blob([csv], \{ type: "text/csv;charset=utf-8;" \});\
-\'a0\'a0\'a0 const url = URL.createObjectURL(blob);\
-\'a0\'a0\'a0 const a = document.createElement('a');\
-\'a0\'a0\'a0 a.href = url; a.download = `bestellungen_$\{Date.now()\}.csv`; a.click();\
-\'a0\'a0\'a0 URL.revokeObjectURL(url);\
-\'a0 \};\
-\
-\'a0 // =======================\
-\'a0 // START\
-\'a0 // =======================\
-\'a0 (async () => \{\
-\'a0\'a0\'a0 await renderAuth();\
-\
-\'a0\'a0\'a0 // Optional: Device-ID aus URL \'fcbernehmen (?dev=...)\
-\'a0\'a0\'a0 const urlDev = new URLSearchParams(location.search).get('dev');\
-\'a0\'a0\'a0 if (urlDev) \{\
-\'a0\'a0\'a0\'a0\'a0 document.getElementById('devId').value = urlDev;\
-\'a0\'a0\'a0\'a0\'a0 supa = createClientWithDevice(urlDev);\
-\'a0\'a0\'a0 \}\
-\
-\'a0\'a0\'a0 // Falls schon eingeloggt \uc0\u8594  \'84Heute\'93 laden\
-\'a0\'a0\'a0 const \{ data:\{ user \} \} = await supa.auth.getUser();\
-\'a0\'a0\'a0 if (user) document.getElementById('btnToday').click();\
-\'a0 \})();\
-</script>\
-</body>\
-</html>\
-}
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Meyras Backstop – Admin</title>
+  <!-- supabase-js (UMD) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <style>
+    :root{
+      --bg:#F6F1E9; --card:#FFFFFF; --muted:#F2E7D9;
+      --text:#3B2F2F; --accent:#8C6A4A; --accent-2:#C8A984;
+    }
+    *{box-sizing:border-box}
+    body{margin:24px; font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; color:var(--text); background:var(--bg)}
+    header{display:flex; gap:12px; align-items:flex-start; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap}
+    h2{margin:0}
+    .card{background:var(--card); border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.05); padding:16px}
+    .btn{background:var(--accent); color:#fff; border:0; padding:8px 12px; border-radius:8px; cursor:pointer}
+    .btn.secondary{background:var(--accent-2); color:#2b2b2b}
+    .btn:disabled{opacity:.5; cursor:not-allowed}
+    .inputs{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+    input[type="email"],input[type="password"],input[type="date"],input[type="text"]{padding:8px 10px; border:1px solid #ddd; border-radius:8px}
+    table{border-collapse:collapse; width:100%; background:#fff; border-radius:12px; overflow:hidden}
+    th,td{padding:10px 12px; border-bottom:1px solid #eee; vertical-align:top}
+    th{background:var(--muted); text-align:left}
+    .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:12px 0}
+    .hint{color:#6b6b6b; font-size:12px}
+    .sum{font-weight:700}
+    .right{display:flex; gap:8px; align-items:center}
+    .chip{display:inline-flex; gap:6px; align-items:center; padding:6px 10px; border-radius:9999px; background:#f1ebe4; margin:4px 6px 0 0; font-size:13px}
+    .filters{display:flex; flex-wrap:wrap; align-items:center}
+  </style>
+</head>
+<body>
+<header>
+  <h2>🧺 Meyras Backstop – Admin</h2>
+
+  <!-- AUTH -->
+  <div id="auth" class="card"></div>
+
+  <!-- DEVICE-ID: wird als x-device-id Header gesetzt -->
+  <div class="card" style="min-width:320px;">
+    <div class="inputs">
+      <label style="display:flex; gap:6px; align-items:center;">
+        <span>Device‑ID:</span>
+        <input type="text" id="devId" placeholder="aus der App (Profil‑Debug) einfügen" style="min-width:220px"/>
+      </label>
+      <button class="btn secondary" id="btnSetDev">Übernehmen</button>
+    </div>
+    <div class="hint">RLS zeigt nur Daten für diese Device‑ID. Leer lassen, falls deine Policies Admin‑Leserechte erlauben.</div>
+  </div>
+</header>
+
+<section class="card">
+  <div class="toolbar">
+    <div class="inputs">
+      <label>Von <input type="date" id="from"></label>
+      <label>Bis <input type="date" id="to"></label>
+    </div>
+    <button class="btn" id="btnLoad">Laden</button>
+    <div class="right">
+      <button class="btn secondary" id="btnToday">Heute</button>
+      <button class="btn secondary" id="btnTomorrow">Morgen</button>
+      <button class="btn secondary" id="btnWeek">Diese Woche</button>
+      <button class="btn secondary" id="btnExport">CSV Export</button>
+    </div>
+  </div>
+
+  <!-- Produkt-Filter -->
+  <div class="filters" id="productFilters" aria-label="Produktfilter"></div>
+
+  <div class="hint" style="margin-top:8px">
+    Tipp: Filter setzen und dann exportieren – ideal für die Backstube.
+  </div>
+</section>
+
+<section style="margin-top:16px">
+  <table id="tbl">
+    <thead>
+    <tr>
+      <th>Abholtag</th>
+      <th>Bestellt am</th>
+      <th>Kunde</th>
+      <th>Artikel (Menge)</th>
+      <th class="sum">Summe</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<script>
+  // =======================
+  // KONFIGURATION
+  // =======================
+  const SUPABASE_URL  = "https://luriirqfumrfjnwnmdqs.supabase.co";
+  const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1cmlpcnFmdW1yZmpud25tZHFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4NTAyMzYsImV4cCI6MjA4NDQyNjIzNn0.41_HuuEoh6cUA6zPxqCtK278HuVjLO6ZP6oXfsiKj8s";
+
+  // Supabase-Client mit optionalem x-device-id Header
+  let supa = createClientWithDevice("");
+  function createClientWithDevice(devId) {
+    const headers = devId ? { 'x-device-id': devId } : {};
+    return supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+      auth: { persistSession: true, autoRefreshToken: true },
+      global: { headers }
+    });
+  }
+  document.getElementById('btnSetDev').onclick = () => {
+    const devId = document.getElementById('devId').value.trim();
+    supa = createClientWithDevice(devId);
+    document.getElementById('btnLoad').click();
+  };
+
+  // =======================
+  // AUTH (Login/Magic Link)
+  // =======================
+  const authDiv = document.getElementById('auth');
+
+  async function renderAuth() {
+    const { data: { user } } = await supa.auth.getUser();
+    if (user) {
+      authDiv.innerHTML = `
+        <div class="inputs">
+          <div><b>Angemeldet:</b> ${user.email}</div>
+          <button class="btn" id="logout">Logout</button>
+        </div>`;
+      document.getElementById('logout').onclick = async () => { await supa.auth.signOut(); location.reload(); };
+    } else {
+      authDiv.innerHTML = `
+        <div class="inputs">
+          <input type="email" id="email" placeholder="E‑Mail" />
+          <input type="password" id="pwd" placeholder="Passwort" />
+          <button class="btn" id="login">Login</button>
+          <button class="btn secondary" id="magic">Magic Link</button>
+        </div>
+        <div class="hint">Hinweis: Admin‑E‑Mails können (per Policy) erweiterte Leserechte haben.</div>`;
+      document.getElementById('login').onclick = async () => {
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('pwd').value.trim();
+        const { error } = await supa.auth.signInWithPassword({ email, password });
+        if (error) alert(error.message); else location.reload();
+      };
+      document.getElementById('magic').onclick = async () => {
+        const email = document.getElementById('email').value.trim();
+        const { error } = await supa.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.href }});
+        if (error) alert(error.message); else alert("Magic Link gesendet.");
+      };
+    }
+  }
+
+  // =======================
+  // LISTE LADEN & RENDERN
+  // =======================
+  const tbody = document.querySelector('#tbl tbody');
+  const productFiltersDiv = document.getElementById('productFilters');
+
+  let lastData = [];                 // letzte Rohdaten von Supabase
+  const selectedProducts = new Set();// aktuell gewählte Produkte
+
+  const fmtDate  = d => new Date(d).toLocaleDateString('de-DE',{weekday:'short', year:'numeric', month:'2-digit', day:'2-digit'});
+  const fmtMoney = n => Number(n).toLocaleString('de-DE', {style:'currency', currency:'EUR'});
+
+  function renderProductFilters(fromData){
+    // Alle Produktnamen ermitteln (unique)
+    const set = new Set();
+    (fromData || []).forEach(o => (o.items || []).forEach(it => set.add(it.product_name)));
+    const names = [...set].sort((a,b)=>a.localeCompare(b,'de'));
+
+    if(names.length === 0){
+      productFiltersDiv.innerHTML = '';
+      return;
+    }
+
+    // Chips/Checkboxen bauen
+    productFiltersDiv.innerHTML = names.map(name => {
+      const id = `prod_${name.replace(/\W/g,'_')}`;
+      const checked = selectedProducts.has(name) ? 'checked' : '';
+      return `<label class="chip">
+                <input type="checkbox" id="${id}" data-name="${name}" ${checked} />
+                <span>${name}</span>
+              </label>`;
+    }).join('') + 
+    (names.length ? `<button class="btn secondary" id="btnReset" style="margin-left:8px;">Filter zurücksetzen</button>` : '');
+
+    // Events binden
+    names.forEach(name => {
+      const id = `prod_${name.replace(/\W/g,'_')}`;
+      const el = document.getElementById(id);
+      el.addEventListener('change', () => {
+        if(el.checked) selectedProducts.add(name); else selectedProducts.delete(name);
+        renderTable(applyFilters(lastData));
+      });
+    });
+    const btnReset = document.getElementById('btnReset');
+    if(btnReset){
+      btnReset.onclick = () => {
+        selectedProducts.clear();
+        renderProductFilters(lastData);
+        renderTable(lastData);
+      };
+    }
+  }
+
+  function applyFilters(data){
+    if(selectedProducts.size === 0) return data;
+    return (data || []).filter(o => (o.items || []).some(it => selectedProducts.has(it.product_name)));
+  }
+
+  function renderTable(data){
+    if(!data || data.length === 0){
+      tbody.innerHTML = `<tr><td colspan="5">Keine Bestellungen im Zeitraum.</td></tr>`;
+      return;
+    }
+    const renderItems = arr => (!Array.isArray(arr) || arr.length===0) ? '–'
+        : arr.map(it => `${it.product_name} (${it.quantity})`).join(', ');
+
+    tbody.innerHTML = data.map(o => `
+      <tr>
+        <td>${fmtDate(o.pickup_date)}</td>
+        <td>${fmtDate(o.created_at)}</td>
+        <td>${o.customer_name ?? '–'}</td>
+        <td>${renderItems(o.items)}</td>
+        <td class="sum">${fmtMoney(o.total)}</td>
+      </tr>
+    `).join('');
+  }
+
+  async function loadOrders(from, to) {
+    tbody.innerHTML = `<tr><td colspan="5">Lade…</td></tr>`;
+
+    // View: orders_with_items_json
+    let q = supa.from('orders_with_items_json').select('*').order('pickup_date', { ascending:true });
+    if (from) q = q.gte('pickup_date', from);
+    if (to)   q = q.lte('pickup_date', to);
+
+    const { data, error } = await q;
+    if (error) {
+      tbody.innerHTML = `<tr><td colspan="5">Fehler: ${error.message}</td></tr>`;
+      return;
+    }
+    lastData = data || [];
+    // Filter-Liste aktualisieren (bestehende Auswahl beibehalten)
+    renderProductFilters(lastData);
+    renderTable(applyFilters(lastData));
+  }
+
+  // =======================
+  // FILTER BUTTONS
+  // =======================
+  const iso = d => d.toISOString().slice(0,10);
+  function startOfWeek(d){
+    const day = d.getDay(); // 0=So … 6=Sa
+    const diff = (day === 0 ? -6 : 1 - day); // Montag als Wochenstart
+    const s = new Date(d); s.setDate(s.getDate()+diff); return s;
+  }
+
+  document.getElementById('btnLoad').onclick = () => {
+    const from = document.getElementById('from').value || null;
+    const to   = document.getElementById('to').value   || null;
+    loadOrders(from, to);
+  };
+  document.getElementById('btnToday').onclick = () => {
+    const d = new Date(); const f = iso(d);
+    document.getElementById('from').value = f;
+    document.getElementById('to').value = f;
+    loadOrders(f, f);
+  };
+  document.getElementById('btnTomorrow').onclick = () => {
+    const d = new Date(); d.setDate(d.getDate()+1); const f = iso(d);
+    document.getElementById('from').value = f;
+    document.getElementById('to').value = f;
+    loadOrders(f, f);
+  };
+  document.getElementById('btnWeek').onclick = () => {
+    const d = new Date();
+    const s = startOfWeek(d); const e = new Date(s); e.setDate(s.getDate()+6);
+    const f = iso(s), t = iso(e);
+    document.getElementById('from').value = f;
+    document.getElementById('to').value = t;
+    loadOrders(f, t);
+  };
+
+  // =======================
+  // CSV EXPORT (gefilterte Sicht)
+  // =======================
+  document.getElementById('btnExport').onclick = async () => {
+    const rows = [...tbody.querySelectorAll('tr')].map(tr =>
+      [...tr.children].map(td => `"${td.textContent.replace(/"/g,'""')}"`).join(',')
+    );
+    if (rows.length === 0) { alert('Keine Daten'); return; }
+    const csv = ["Abholtag,Bestellt am,Kunde,Artikel,Summe", ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `bestellungen_${Date.now()}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // =======================
+  // START
+  // =======================
+  (async () => {
+    await renderAuth();
+
+    // Optional: Device-ID aus URL übernehmen (?dev=...)
+    const urlDev = new URLSearchParams(location.search).get('dev');
+    if (urlDev) {
+      document.getElementById('devId').value = urlDev;
+      supa = createClientWithDevice(urlDev);
+    }
+
+    // Falls schon eingeloggt → „Heute“ laden
+    const { data:{ user } } = await supa.auth.getUser();
+    if (user) document.getElementById('btnToday').click();
+  })();
+</script>
+</body>
+</html>
