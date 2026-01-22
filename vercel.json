@@ -1,7 +1,0 @@
-
-{
-  "routes": [
-    { "src": "/", "dest": "/admin_V3.html" }
-  ]
-}
-
